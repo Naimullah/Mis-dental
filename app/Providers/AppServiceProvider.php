@@ -4,7 +4,9 @@ namespace App\Providers;
 
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 
@@ -24,6 +26,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureDefaults();
+        $this->configureMasterDataAccess();
     }
 
     /**
@@ -46,5 +49,15 @@ class AppServiceProvider extends ServiceProvider
                 ->uncompromised()
             : null,
         );
+    }
+
+    /**
+     * Temporary master-data gate until the roles/permissions foundation exists.
+     * Closed by default, and always closed in production.
+     */
+    protected function configureMasterDataAccess(): void
+    {
+        Gate::define('manage-master-data', fn (User $user): bool => ! app()->isProduction()
+            && (bool) config('master_data.open_access'));
     }
 }

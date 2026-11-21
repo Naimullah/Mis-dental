@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use LogicException;
 
 #[Fillable(['iso3', 'english_name', 'is_active'])]
@@ -35,5 +36,12 @@ class Country extends Model
                 return $value;
             },
         );
+    }
+
+    /** Languages used in this country (P01.04). Not translations of the country name. */
+    public function locales(): BelongsToMany
+    {
+        return $this->belongsToMany(Locale::class, 'country_locales', 'country_code', 'locale_code', 'iso2', 'code')
+            ->withPivot('is_default');
     }
 }

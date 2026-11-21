@@ -2,41 +2,23 @@
 
 namespace Tests\Feature;
 
+use App\Http\Requests\CountryRequest;
+use App\Http\Requests\StoreCountryRequest;
+use App\Http\Requests\UpdateCountryRequest;
 use App\Models\Country;
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Contracts\Validation\Factory;
 use Illuminate\Database\QueryException;
+use Illuminate\Routing\Route;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Validation\Validator;
 use LogicException;
-use PDO;
 use PHPUnit\Framework\Attributes\DataProvider;
-use Tests\TestCase;
+use Tests\CountryDatabaseTestCase;
 
-class CountrySchemaTest extends TestCase
+class CountrySchemaTest extends CountryDatabaseTestCase
 {
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        $this->assertTrue(app()->environment('testing'));
-        $this->assertFalse(app()->configurationIsCached());
-
-        // Inspect resolved configuration, including any database URL, before opening PDO.
-        $connection = DB::connection();
-        $this->assertSame('sqlite', $connection->getConfig('driver'));
-        $this->assertSame(':memory:', $connection->getConfig('database'));
-        $this->assertEmpty($connection->getConfig('read'));
-        $this->assertEmpty($connection->getConfig('write'));
-
-        $pdo = $connection->getPdo();
-        $this->assertSame('sqlite', $pdo->getAttribute(PDO::ATTR_DRIVER_NAME));
-        $databases = $pdo->query('PRAGMA database_list')->fetchAll(PDO::FETCH_ASSOC);
-        $this->assertSame(['main'], array_column($databases, 'name'));
-        $this->assertSame([''], array_column($databases, 'file'));
-
-        $migration = require database_path('migrations/2026_11_21_000000_create_countries_table.php');
-        $migration->up();
-    }
-
     public function test_schema_has_exactly_four_columns_with_expected_nullability(): void
     {
         $columns = collect(Schema::getColumns('countries'))->keyBy('name');
@@ -121,5 +103,106 @@ class CountrySchemaTest extends TestCase
 
         $this->expectException(LogicException::class);
         $country->iso2 = 'DE';
+    }
+
+    #[DataProvider('countryRequests')]
+    public function test_country_requests_deny_authorization(string $requestClass): void
+    {
+        $this->expectException(AuthorizationException::class);
+
+        $requestClass::create('/', 'POST')->setContainer($this->app)->validateResolved();
+    }
+
+    public static function countryRequests(): array
+    {
+        return [[StoreCountryRequest::class], [UpdateCountryRequest::class]];
+    }
+
+    public function test_store_accepts_trimmed_unicode_name_false_and_nullable_iso3(): void
+    {
+        $name = str_repeat('é', 120);
+        $request = StoreCountryRequest::create('/', 'POST', [
+            'iso2' => 'AF',
+            'iso3' => null,
+            'english_name' => "  {$name}  ",
+            'is_active' => false,
+        ]);
+
+        $this->assertSame([
+            'iso2' => 'AF',
+            'iso3' => null,
+            'english_name' => $name,
+            'is_active' => false,
+        ], $this->countryValidator($request)->validated());
+    }
+
+    public function test_store_rejects_missing_and_invalid_fields(): void
+    {
+        $missing = $this->countryValidator(StoreCountryRequest::create('/', 'POST'));
+        $this->assertSame(['iso2', 'english_name', 'is_active'], $missing->errors()->keys());
+
+        foreach ([
+            ['af', 'afg', "\u{00A0}\t", 'invalid'],
+            ['AFG', 'AF', str_repeat('é', 121), null],
+            ['ÅF', 'AFÉ', [], []],
+        ] as [$iso2, $iso3, $name, $status]) {
+            $request = StoreCountryRequest::create('/', 'POST', [
+                'iso2' => $iso2, 'iso3' => $iso3, 'english_name' => $name, 'is_active' => $status,
+            ]);
+
+            $this->assertSame(['iso2', 'iso3', 'english_name', 'is_active'], $this->countryValidator($request)->errors()->keys());
+        }
+    }
+
+    public function test_store_rejects_duplicate_codes(): void
+    {
+        DB::table('countries')->insert([
+            'iso2' => 'AF', 'iso3' => 'AFG', 'english_name' => 'Afghanistan', 'is_active' => true,
+        ]);
+
+        $request = StoreCountryRequest::create('/', 'POST', [
+            'iso2' => 'AF', 'iso3' => 'AFG', 'english_name' => 'Afghanistan', 'is_active' => true,
+        ]);
+
+        $this->assertSame(['iso2', 'iso3'], $this->countryValidator($request)->errors()->keys());
+    }
+
+    public function test_update_excludes_only_the_bound_country_and_rejects_iso2_input(): void
+    {
+        DB::table('countries')->insert([
+            ['iso2' => 'AF', 'iso3' => 'AFG', 'english_name' => 'Afghanistan', 'is_active' => true],
+            ['iso2' => 'DE', 'iso3' => 'DEU', 'english_name' => 'Germany', 'is_active' => true],
+        ]);
+
+        $country = Country::query()->findOrFail('AF');
+        $request = UpdateCountryRequest::create('/countries/AF', 'PUT', [
+            'iso3' => 'AFG', 'english_name' => ' Afghanistan ', 'is_active' => false,
+        ]);
+        $route = (new Route('PUT', '/countries/{country}', []))->bind($request);
+        $route->setParameter('country', $country);
+        $request->setRouteResolver(fn () => $route);
+
+        $this->assertSame('Afghanistan', $this->countryValidator($request)->validated()['english_name']);
+
+        $request->merge(['iso3' => null]);
+        $this->assertNull($this->countryValidator($request)->validated()['iso3']);
+
+        $request->merge(['iso3' => 'DEU', 'iso2' => 'DE', 'country' => 'DE']);
+        $this->assertSame(['iso2', 'iso3'], $this->countryValidator($request)->errors()->keys());
+
+        $request->merge(['iso3' => null, 'iso2' => null]);
+        $this->assertSame(['iso2'], $this->countryValidator($request)->errors()->keys());
+    }
+
+    private function countryValidator(CountryRequest $request): Validator
+    {
+        $request->setContainer($this->app);
+
+        // Exercise Form Request preparation and validation independently of the authorization gate.
+        return (function (): Validator {
+            $this->prepareForValidation();
+
+            return $this->createDefaultValidator(app(Factory::class));
+        })->call($request);
     }
 }
