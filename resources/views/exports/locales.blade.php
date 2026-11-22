@@ -28,6 +28,10 @@
                     <td class="ltr">{{ $row->code }}</td>
                     <td class="ltr">{{ $row->english_name }}</td>
                     <td class="ltr">{{ $row->text_direction }}</td>
+                    <td>{{ $row->is_active ? __('Active') : __('Inactive') }}</td>
+                    <td><bdi>{{ $row->native_name }}</bdi></td>
+                    <td class="ltr">{{ $row->default_calendar_code }}</td>
+                    <td class="ltr">{{ $row->default_numbering_system_code }}</td>
                 </tr>
             @endforeach
         </tbody>

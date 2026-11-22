@@ -18,7 +18,8 @@ return Application::configure(basePath: dirname(__DIR__))
             __DIR__.'/../routes/locale.php',
             __DIR__.'/../routes/countries.php',
             __DIR__.'/../routes/currencies.php',
-            // Register Locales management only after platform authorization is approved.
+            // Locales management: temporary master-data switch until platform authorization exists.
+            __DIR__.'/../routes/locales.php',
             __DIR__.'/../routes/country-locales.php',
         ],
         commands: __DIR__.'/../routes/console.php',

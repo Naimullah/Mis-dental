@@ -154,9 +154,10 @@ class CountryLocaleTest extends TestCase
         $this->service->remove($de, $en);
     }
 
-    public function test_change_routes_are_blocked_like_other_country_changes(): void
+    public function test_change_routes_are_closed_without_the_access_switch(): void
     {
-        $this->openAccess();
+        config(['master_data.open_access' => false]);
+        $this->actingAs(User::factory()->create());
         $this->link('AF', 'ps-AF', true);
 
         $base = '/platform/master-data/countries/AF/locales';
@@ -166,6 +167,42 @@ class CountryLocaleTest extends TestCase
 
         $this->assertSame(['ps-AF'], $this->defaults('AF'));
         $this->assertDatabaseCount('country_locales', 1);
+    }
+
+    public function test_links_can_be_added_defaulted_and_removed_with_access(): void
+    {
+        $this->openAccess();
+        $base = '/platform/master-data/countries/AF/locales';
+
+        $this->post($base, ['locale_code' => 'ps-AF', 'is_default' => true])->assertRedirect()->assertSessionHasNoErrors();
+        $this->post($base, ['locale_code' => 'fa-AF', 'is_default' => false])->assertRedirect()->assertSessionHasNoErrors();
+        $this->assertSame(['ps-AF'], $this->defaults('AF'));
+
+        $this->post($base, ['locale_code' => 'fa-AF', 'is_default' => false])->assertSessionHasErrors(['locale_code']);
+        $this->post($base, ['locale_code' => 'xx', 'is_default' => false])->assertSessionHasErrors(['locale_code']);
+
+        $this->patch($base.'/fa-AF/default', ['is_default' => true])->assertRedirect()->assertSessionHasNoErrors();
+        $this->assertSame(['fa-AF'], $this->defaults('AF'));
+
+        $this->delete($base.'/fa-AF')->assertRedirect();
+        $this->assertSame([], $this->defaults('AF'));
+        $this->assertDatabaseMissing('country_locales', ['country_code' => 'AF', 'locale_code' => 'fa-AF']);
+
+        $this->delete($base.'/fa-AF')->assertNotFound();
+        $this->post('/platform/master-data/countries/ZZ/locales', ['locale_code' => 'en', 'is_default' => false])->assertNotFound();
+
+        // Countries' own changes stay blocked.
+        $this->put('/platform/master-data/countries/AF', ['iso3' => null, 'english_name' => 'X', 'is_active' => true])->assertForbidden();
+    }
+
+    public function test_countries_page_offers_link_management_with_access(): void
+    {
+        $this->openAccess();
+
+        $this->get('/platform/master-data/countries?languages=DE')->assertInertia(fn (Assert $page) => $page
+            ->where('canManageCountryLocales', true)
+            ->where('countryLocales.country.is_active', false)
+            ->has('countryLocales.available', 3));
     }
 
     public function test_countries_page_shares_read_only_languages_panel(): void
@@ -179,7 +216,7 @@ class CountryLocaleTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page
                 ->where('countryLocales.country', ['iso2' => 'AF', 'english_name' => 'Afghanistan', 'is_active' => true])
                 ->has('countryLocales.links', 2)
-                ->where('countryLocales.links.0', ['code' => 'ps-AF', 'english_name' => 'Pashto (Afghanistan)', 'text_direction' => 'RTL', 'is_default' => true])
+                ->where('countryLocales.links.0', ['code' => 'ps-AF', 'english_name' => 'Pashto (Afghanistan)', 'text_direction' => 'RTL', 'is_default' => true, 'is_active' => true])
                 ->where('countryLocales.links.1.code', 'fa-AF')
                 ->where('countryLocales.available', [['code' => 'en', 'english_name' => 'English']]));
 
@@ -187,6 +224,34 @@ class CountryLocaleTest extends TestCase
             $this->get('/platform/master-data/countries?languages='.$code)
                 ->assertInertia(fn (Assert $page) => $page->where('countryLocales', null));
         }
+    }
+
+    public function test_disabled_languages_cannot_be_newly_linked_or_made_default(): void
+    {
+        $af = Country::query()->findOrFail('AF');
+        $this->link('AF', 'fa-AF', false);
+        DB::table('locales')->whereIn('code', ['fa-AF', 'en'])->update(['is_active' => false]);
+
+        try {
+            $this->service->add($af, Locale::query()->findOrFail('en'), false);
+            $this->fail('A disabled language was linked.');
+        } catch (ValidationException $exception) {
+            $this->assertSame(['locale_code'], array_keys($exception->errors()));
+        }
+
+        try {
+            $this->service->setDefault($af, Locale::query()->findOrFail('fa-AF'), true);
+            $this->fail('A disabled language became the default.');
+        } catch (ValidationException $exception) {
+            $this->assertSame(['is_default'], array_keys($exception->errors()));
+        }
+
+        // An existing link to a now-disabled language is kept and shown as inactive.
+        $panel = $this->service->panel('AF');
+        $this->assertSame([['code' => 'ps-AF', 'english_name' => 'Pashto (Afghanistan)']], $panel['available']);
+        $this->assertFalse($panel['links'][0]['is_active']);
+        $this->assertSame(1, DB::table('country_locales')->count());
+        $this->assertSame([], $this->defaults('AF'));
     }
 
     private function openAccess(): void

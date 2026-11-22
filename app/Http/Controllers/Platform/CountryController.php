@@ -49,7 +49,8 @@ class CountryController extends Controller
             'filters' => $filters,
             'canMutate' => false,
             'exportsAvailable' => ['xlsx' => false, 'pdf' => false],
-            // P01.04: read-only languages panel for ?languages=ISO2.
+            'canManageCountryLocales' => $request->user()?->can('manage-master-data') ?? false,
+            // P01.04: languages panel for ?languages=ISO2.
             'countryLocales' => $request->filled('languages')
                 ? app(CountryLocaleService::class)->panel($request->query('languages'))
                 : null,

@@ -11,12 +11,12 @@ abstract class LocaleRequest extends FormRequest
 
     public function authorize(): bool
     {
-        return false;
+        return $this->user()?->can('manage-master-data') ?? false;
     }
 
     protected function prepareForValidation(): void
     {
-        $this->merge($this->normalizeLocaleInput($this->only('english_name')));
+        $this->merge($this->normalizeLocaleInput($this->only(['english_name', 'native_name', 'default_calendar_code', 'default_numbering_system_code'])));
     }
 
     /** @return array<string, string> */

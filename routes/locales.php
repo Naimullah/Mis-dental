@@ -14,4 +14,6 @@ Route::prefix('platform/master-data/locales')
         Route::get('/export/pdf', [LocaleController::class, 'exportPdf'])->name('export.pdf');
         Route::put('/{locale}', [LocaleController::class, 'update'])
             ->where('locale', '[A-Za-z]{2,3}(-[A-Za-z0-9]{2,8})*')->name('update');
+        Route::patch('/{locale}/status', [LocaleController::class, 'updateStatus'])
+            ->where('locale', '[A-Za-z]{2,3}(-[A-Za-z0-9]{2,8})*')->name('status.update');
     });

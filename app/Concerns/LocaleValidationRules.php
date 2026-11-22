@@ -11,6 +11,8 @@ use Illuminate\Validation\Rules\Unique;
 trait LocaleValidationRules
 {
     /**
+     * Trims text, and turns blank optional values into null.
+     *
      * @param  array<string, mixed>  $input
      * @return array<string, mixed>
      */
@@ -18,6 +20,13 @@ trait LocaleValidationRules
     {
         if (is_string($input['english_name'] ?? null)) {
             $input['english_name'] = Str::trim($input['english_name']);
+        }
+
+        foreach (['native_name', 'default_calendar_code', 'default_numbering_system_code'] as $field) {
+            if (is_string($input[$field] ?? null)) {
+                $value = Str::trim($input[$field]);
+                $input[$field] = $value === '' ? null : $value;
+            }
         }
 
         return $input;
@@ -48,6 +57,11 @@ trait LocaleValidationRules
                     }
                 },
             ],
+            // Optional on input: the database default (true) applies when omitted.
+            'is_active' => ['sometimes', 'required', 'boolean'],
+            'native_name' => ['sometimes', 'nullable', 'string', 'max:120'],
+            'default_calendar_code' => ['sometimes', 'nullable', 'string', 'max:32', Rule::in(config('locale_options.calendars', []))],
+            'default_numbering_system_code' => ['sometimes', 'nullable', 'string', 'max:32', Rule::in(config('locale_options.numbering_systems', []))],
         ];
     }
 
@@ -56,6 +70,8 @@ trait LocaleValidationRules
     {
         return [
             'code.in' => __('Choose a language code from the supported list.'),
+            'default_calendar_code.in' => __('Choose a CLDR calendar from the supported list.'),
+            'default_numbering_system_code.in' => __('Choose a CLDR numbering system from the supported list.'),
         ];
     }
 }

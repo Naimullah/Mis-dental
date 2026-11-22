@@ -34,16 +34,20 @@ class LocaleExporter
         foreach ($this->headings() as $index => $heading) {
             $sheet->setCellValueExplicit([$index + 1, 1], $heading, DataType::TYPE_STRING);
         }
-        $sheet->getStyle('A1:C1')->getFont()->setBold(true);
+        $sheet->getStyle('A1:G1')->getFont()->setBold(true);
 
         foreach ($rows as $offset => $locale) {
             $row = $offset + 2;
             $sheet->setCellValueExplicit([1, $row], $locale->code, DataType::TYPE_STRING);
             $sheet->setCellValueExplicit([2, $row], $locale->english_name, DataType::TYPE_STRING);
             $sheet->setCellValueExplicit([3, $row], $locale->text_direction, DataType::TYPE_STRING);
+            $sheet->setCellValueExplicit([4, $row], $locale->is_active ? __('Active') : __('Inactive'), DataType::TYPE_STRING);
+            $sheet->setCellValueExplicit([5, $row], (string) $locale->native_name, DataType::TYPE_STRING);
+            $sheet->setCellValueExplicit([6, $row], (string) $locale->default_calendar_code, DataType::TYPE_STRING);
+            $sheet->setCellValueExplicit([7, $row], (string) $locale->default_numbering_system_code, DataType::TYPE_STRING);
         }
 
-        foreach (range('A', 'C') as $column) {
+        foreach (range('A', 'G') as $column) {
             $sheet->getColumnDimension($column)->setAutoSize(true);
         }
 
@@ -105,7 +109,7 @@ class LocaleExporter
     /** @return list<string> */
     private function headings(): array
     {
-        return [__('Code'), __('English name'), __('Text direction')];
+        return [__('Code'), __('English name'), __('Text direction'), __('Status'), __('Native name'), __('Calendar'), __('Numbering system')];
     }
 
     private function pageDirection(): string

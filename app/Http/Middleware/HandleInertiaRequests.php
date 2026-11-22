@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Models\Locale;
+use App\Support\InterfaceLocales;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Middleware;
@@ -44,8 +45,8 @@ class HandleInertiaRequests extends Middleware
                 'user' => $request->user(),
             ],
             'locale' => app()->getLocale(),
-            'direction' => config('locales.supported.'.app()->getLocale().'.dir', 'ltr'),
-            'locales' => collect(config('locales.supported', []))
+            'direction' => app(InterfaceLocales::class)->direction(app()->getLocale()),
+            'locales' => collect(app(InterfaceLocales::class)->enabled())
                 ->map(fn (array $locale, string $code): array => ['code' => $code, 'name' => $locale['name']])
                 ->values(),
             'translations' => fn (): array => $this->translations(app()->getLocale()),
@@ -68,17 +69,30 @@ class HandleInertiaRequests extends Middleware
         return route($name, absolute: false);
     }
 
-    /** @return array<string, string> */
+    /**
+     * Interface strings for the fallback chain (e.g. fa-AF → fa → en). More specific
+     * files win; keys missing everywhere show the English source text.
+     *
+     * @return array<string, string>
+     */
     private function translations(string $locale): array
     {
-        $path = lang_path($locale.'.json');
+        $merged = [];
 
-        if ($locale === 'en' || ! is_file($path)) {
-            return [];
+        foreach (array_reverse(app(InterfaceLocales::class)->chain($locale)) as $code) {
+            $path = lang_path($code.'.json');
+
+            if (! is_file($path)) {
+                continue;
+            }
+
+            $translations = json_decode((string) file_get_contents($path), true);
+
+            if (is_array($translations)) {
+                $merged = array_replace($merged, array_filter($translations, fn (mixed $value): bool => is_string($value) && $value !== ''));
+            }
         }
 
-        $translations = json_decode((string) file_get_contents($path), true);
-
-        return is_array($translations) ? $translations : [];
+        return $merged;
     }
 }

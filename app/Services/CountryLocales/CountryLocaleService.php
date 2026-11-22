@@ -36,16 +36,19 @@ class CountryLocaleService
             ->where('country_locales.country_code', $iso2)
             ->orderByDesc('country_locales.is_default')
             ->orderBy('locales.code')
-            ->get(['locales.code', 'locales.english_name', 'locales.text_direction', 'country_locales.is_default'])
+            ->get(['locales.code', 'locales.english_name', 'locales.text_direction', 'locales.is_active', 'country_locales.is_default'])
             ->map(fn (object $row): array => [
                 'code' => $row->code,
                 'english_name' => $row->english_name,
                 'text_direction' => $row->text_direction,
                 'is_default' => (bool) $row->is_default,
+                'is_active' => (bool) $row->is_active,
             ])
             ->all();
 
+        // Only enabled languages can be newly linked.
         $available = Locale::query()
+            ->where('is_active', true)
             ->whereNotIn('code', array_column($links, 'code'))
             ->orderBy('code')
             ->get(['code', 'english_name'])
@@ -64,6 +67,12 @@ class CountryLocaleService
         try {
             DB::transaction(function () use ($country, $locale, $isDefault): void {
                 $this->lockCountry($country);
+
+                if (! $locale->is_active) {
+                    throw ValidationException::withMessages([
+                        'locale_code' => __('Only enabled languages can be linked to a country.'),
+                    ]);
+                }
 
                 if ($this->link($country, $locale)->exists()) {
                     throw ValidationException::withMessages([
@@ -93,6 +102,12 @@ class CountryLocaleService
         DB::transaction(function () use ($country, $locale, $isDefault): void {
             $this->lockCountry($country);
             $this->assertLinked($country, $locale);
+
+            if ($isDefault && ! $locale->is_active) {
+                throw ValidationException::withMessages([
+                    'is_default' => __('A disabled language cannot be the default for a country.'),
+                ]);
+            }
 
             if ($isDefault) {
                 $this->clearDefaults($country);

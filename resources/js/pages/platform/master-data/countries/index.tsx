@@ -63,6 +63,7 @@ type Props = {
     canMutate?: boolean;
     exportsAvailable?: { xlsx: boolean; pdf: boolean };
     countryLocales?: CountryLocalesPanel | null;
+    canManageCountryLocales?: boolean;
 };
 
 export default function CountriesIndex({
@@ -71,6 +72,7 @@ export default function CountriesIndex({
     canMutate = false,
     exportsAvailable,
     countryLocales = null,
+    canManageCountryLocales = false,
 }: Props) {
     const { url } = usePage();
     const { t, direction, locale } = useTrans();
@@ -488,6 +490,7 @@ export default function CountriesIndex({
 
             <CountryLanguagesDialog
                 panel={countryLocales}
+                canManage={canManageCountryLocales}
                 onClose={() => showLanguages(null)}
             />
 

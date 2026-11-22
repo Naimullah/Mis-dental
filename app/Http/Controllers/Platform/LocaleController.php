@@ -34,6 +34,10 @@ class LocaleController extends Controller
                 'code' => $locale->code,
                 'english_name' => $locale->english_name,
                 'text_direction' => $locale->text_direction,
+                'is_active' => $locale->is_active,
+                'native_name' => $locale->native_name,
+                'default_calendar_code' => $locale->default_calendar_code,
+                'default_numbering_system_code' => $locale->default_numbering_system_code,
             ]);
 
         $catalog = collect(config('locale_catalog', []))
@@ -45,9 +49,12 @@ class LocaleController extends Controller
             ->values();
 
         return Inertia::render('platform/master-data/locales/index', [
-            'locales' => $locales,
+            // Not 'locales': that name is the shared interface-language list used by the switcher.
+            'localeRows' => $locales,
             'filters' => $filters,
             'catalog' => $catalog,
+            'calendars' => config('locale_options.calendars', []),
+            'numberingSystems' => config('locale_options.numbering_systems', []),
             'exportsAvailable' => LocaleExporter::available(),
         ]);
     }
@@ -66,6 +73,23 @@ class LocaleController extends Controller
         $this->locales->update($locale->code, $request->validated());
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Language :code updated.', ['code' => $locale->code])]);
+
+        return back();
+    }
+
+    public function updateStatus(Request $request, Locale $locale): RedirectResponse
+    {
+        $validated = $request->validate(['is_active' => ['required', 'boolean']]);
+        $active = filter_var($validated['is_active'], FILTER_VALIDATE_BOOLEAN);
+
+        $active ? $this->locales->activate($locale->code) : $this->locales->deactivate($locale->code);
+
+        Inertia::flash('toast', [
+            'type' => 'success',
+            'message' => $active
+                ? __('Language :code activated.', ['code' => $locale->code])
+                : __('Language :code deactivated.', ['code' => $locale->code]),
+        ]);
 
         return back();
     }
