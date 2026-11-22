@@ -11,6 +11,11 @@ import {
 import { useState } from 'react';
 import type { FormEvent } from 'react';
 import {
+    CatalogName,
+    CatalogTranslationsDialog,
+} from '@/components/catalog-translations-dialog';
+import type { CatalogTranslations } from '@/components/catalog-translations-dialog';
+import {
     COUNTRIES_URL,
     CountryFormDialog,
 } from '@/components/countries/country-form-dialog';
@@ -59,6 +64,7 @@ const columns = [
 
 type Props = {
     countries: CountryPage;
+    catalogTranslations: CatalogTranslations;
     filters?: Partial<CountryFilters>;
     canMutate?: boolean;
     exportsAvailable?: { xlsx: boolean; pdf: boolean };
@@ -68,6 +74,7 @@ type Props = {
 
 export default function CountriesIndex({
     countries,
+    catalogTranslations,
     filters,
     canMutate = false,
     exportsAvailable,
@@ -86,6 +93,7 @@ export default function CountriesIndex({
     const numbers = new Intl.NumberFormat(locale);
     const [creating, setCreating] = useState(false);
     const [editing, setEditing] = useState<Country | null>(null);
+    const [translating, setTranslating] = useState<Country | null>(null);
     const [statusTarget, setStatusTarget] = useState<Country | null>(null);
     const [statusProcessing, setStatusProcessing] = useState(false);
 
@@ -342,6 +350,12 @@ export default function CountriesIndex({
                             >
                                 {t('Languages')}
                             </th>
+                            <th
+                                scope="col"
+                                className="px-2 py-2 text-start sm:px-3"
+                            >
+                                {t('Translations')}
+                            </th>
                             {canMutate && (
                                 <th
                                     scope="col"
@@ -362,7 +376,14 @@ export default function CountriesIndex({
                                     <bdi dir="ltr">{country.iso3 ?? '—'}</bdi>
                                 </td>
                                 <td className="px-3 py-3">
-                                    <bdi>{country.english_name}</bdi>
+                                    <CatalogName
+                                        canonical={country.english_name}
+                                        translated={
+                                            catalogTranslations.displayNames[
+                                                country.iso2
+                                            ]
+                                        }
+                                    />
                                 </td>
                                 <td className="px-3 py-3">
                                     <Badge
@@ -389,6 +410,16 @@ export default function CountriesIndex({
                                         }
                                     >
                                         {t('Languages')}
+                                    </Button>
+                                </td>
+                                <td className="px-3 py-3">
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => setTranslating(country)}
+                                    >
+                                        {t('Translations')}
                                     </Button>
                                 </td>
                                 {canMutate && (
@@ -428,7 +459,7 @@ export default function CountriesIndex({
                             <tr>
                                 <td
                                     colSpan={
-                                        columns.length + 1 + Number(canMutate)
+                                        columns.length + 2 + Number(canMutate)
                                     }
                                     className="p-8 text-center text-muted-foreground"
                                 >
@@ -488,6 +519,17 @@ export default function CountriesIndex({
                 )}
             </div>
 
+            {translating && (
+                <CatalogTranslationsDialog
+                    key={translating.iso2}
+                    data={catalogTranslations}
+                    code={translating.iso2}
+                    name={translating.english_name}
+                    url={`${COUNTRIES_URL}/${translating.iso2}/translations`}
+                    maxLength={160}
+                    onClose={() => setTranslating(null)}
+                />
+            )}
             <CountryLanguagesDialog
                 panel={countryLocales}
                 canManage={canManageCountryLocales}

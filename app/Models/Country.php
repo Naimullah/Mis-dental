@@ -11,6 +11,8 @@ use LogicException;
 #[Fillable(['iso3', 'english_name', 'is_active'])]
 class Country extends Model
 {
+    public const TRANSLATION_ENTITY_KEY = 'country_code';
+
     protected $primaryKey = 'iso2';
 
     protected $keyType = 'string';
@@ -18,6 +20,13 @@ class Country extends Model
     public $incrementing = false;
 
     public $timestamps = false;
+
+    /** @return BelongsToMany<Locale, $this, CountryTranslation> */
+    public function translationLocales(): BelongsToMany
+    {
+        return $this->belongsToMany(Locale::class, 'country_translations', self::TRANSLATION_ENTITY_KEY, 'locale_code', 'iso2', 'code')
+            ->using(CountryTranslation::class)->withPivot('display_name');
+    }
 
     protected function casts(): array
     {
@@ -38,7 +47,11 @@ class Country extends Model
         );
     }
 
-    /** Languages used in this country (P01.04). Not translations of the country name. */
+    /**
+     * Languages used in this country (P01.04).
+     *
+     * @return BelongsToMany<Locale, $this>
+     */
     public function locales(): BelongsToMany
     {
         return $this->belongsToMany(Locale::class, 'country_locales', 'country_code', 'locale_code', 'iso2', 'code')

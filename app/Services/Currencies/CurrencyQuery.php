@@ -21,7 +21,7 @@ class CurrencyQuery
     /**
      * Invalid or unknown values fall back to defaults instead of failing the request.
      *
-     * @return array{q: string, status: string, sort: string, dir: string, per_page: int}
+     * @return array{q: string, status: string, sort: string, dir: 'asc'|'desc', per_page: int}
      */
     public function filters(Request $request): array
     {
@@ -42,7 +42,10 @@ class CurrencyQuery
         ];
     }
 
-    /** @param array{q: string, status: string, sort: string, dir: string} $filters */
+    /**
+     * @param  array{q: string, status: string, sort: string, dir: 'asc'|'desc'}  $filters
+     * @return Builder<Currency>
+     */
     public function build(array $filters): Builder
     {
         $query = Currency::query()->select(['code', 'english_name', 'symbol', 'minor_units', 'is_active']);

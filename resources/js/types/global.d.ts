@@ -16,7 +16,12 @@ declare module '@inertiajs/core' {
             direction: 'ltr' | 'rtl';
             locales: { code: string; name: string }[];
             translations: Record<string, string>;
-            can: { manageMasterData: boolean };
+            can: {
+                manageMasterData: boolean;
+                viewPermissionCatalog: boolean;
+                managePlatformUsers: boolean;
+                manageRoles: boolean;
+            };
             localeManagementUrl: string | null;
             [key: string]: unknown;
         };

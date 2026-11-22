@@ -3,37 +3,29 @@
 namespace Tests\Feature\Auth;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Features;
 use Tests\TestCase;
 
+/** P03.03: there is no public self-registration; platform maintainers create accounts. */
 class RegistrationTest extends TestCase
 {
     use RefreshDatabase;
 
-    protected function setUp(): void
+    public function test_public_registration_is_disabled(): void
     {
-        parent::setUp();
+        $this->assertFalse(Features::enabled(Features::registration()));
+        $this->assertFalse(Route::has('register'));
 
-        $this->skipUnlessFortifyHas(Features::registration());
-    }
-
-    public function test_registration_screen_can_be_rendered()
-    {
-        $response = $this->get(route('register'));
-
-        $response->assertOk();
-    }
-
-    public function test_new_users_can_register()
-    {
-        $response = $this->post(route('register.store'), [
+        $this->get('/register')->assertNotFound();
+        $this->post('/register', [
             'name' => 'Test User',
             'email' => 'test@example.com',
             'password' => 'password',
             'password_confirmation' => 'password',
-        ]);
+        ])->assertNotFound();
 
-        $this->assertAuthenticated();
-        $response->assertRedirect(route('dashboard', absolute: false));
+        $this->assertGuest();
+        $this->assertDatabaseCount('users', 0);
     }
 }

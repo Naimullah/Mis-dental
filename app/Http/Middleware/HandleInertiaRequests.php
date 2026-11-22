@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Models\Locale;
+use App\Models\Permission;
 use App\Support\InterfaceLocales;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -52,6 +53,9 @@ class HandleInertiaRequests extends Middleware
             'translations' => fn (): array => $this->translations(app()->getLocale()),
             'can' => [
                 'manageMasterData' => fn (): bool => $request->user()?->can('manage-master-data') ?? false,
+                'viewPermissionCatalog' => fn (): bool => $request->user()?->can(Permission::VIEW_CATALOG) ?? false,
+                'managePlatformUsers' => fn (): bool => $request->user()?->can(Permission::MANAGE_USERS) ?? false,
+                'manageRoles' => fn (): bool => $request->user()?->can(Permission::MANAGE_ROLES) ?? false,
             ],
             'localeManagementUrl' => fn (): ?string => $this->localeManagementUrl($request),
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',

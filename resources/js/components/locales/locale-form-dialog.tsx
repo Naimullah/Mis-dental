@@ -62,7 +62,8 @@ export function LocaleFormDialog({
         is_active: locale?.is_active ?? true,
         native_name: locale?.native_name ?? '',
         default_calendar_code: locale?.default_calendar_code ?? '',
-        default_numbering_system_code: locale?.default_numbering_system_code ?? '',
+        default_numbering_system_code:
+            locale?.default_numbering_system_code ?? '',
     });
 
     const choose = (code: string) => {
@@ -79,13 +80,18 @@ export function LocaleFormDialog({
     const submit = (event: FormEvent) => {
         event.preventDefault();
 
-        const options = { preserveScroll: true, onSuccess: () => onOpenChange(false) };
+        const options = {
+            preserveScroll: true,
+            onSuccess: () => onOpenChange(false),
+        };
 
         // Blank optional fields are sent as null so they clear stored values.
         const optional = (data: LocaleForm) => ({
-            native_name: data.native_name.trim() === '' ? null : data.native_name,
+            native_name:
+                data.native_name.trim() === '' ? null : data.native_name,
             default_calendar_code: data.default_calendar_code || null,
-            default_numbering_system_code: data.default_numbering_system_code || null,
+            default_numbering_system_code:
+                data.default_numbering_system_code || null,
         });
 
         if (isEdit) {
@@ -117,9 +123,15 @@ export function LocaleFormDialog({
             <Label htmlFor={`locale-${field}`}>{label}</Label>
             <Select
                 value={form.data[field] === '' ? NONE : form.data[field]}
-                onValueChange={(value) => form.setData(field, value === NONE ? '' : value)}
+                onValueChange={(value) =>
+                    form.setData(field, value === NONE ? '' : value)
+                }
             >
-                <SelectTrigger id={`locale-${field}`} className="w-full" dir="ltr">
+                <SelectTrigger
+                    id={`locale-${field}`}
+                    className="w-full"
+                    dir="ltr"
+                >
                     <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -142,24 +154,42 @@ export function LocaleFormDialog({
             <DialogContent className="max-h-[90vh] overflow-y-auto">
                 <form onSubmit={submit} className="flex flex-col gap-4">
                     <DialogHeader>
-                        <DialogTitle>{isEdit ? t('Edit language') : t('Add language')}</DialogTitle>
+                        <DialogTitle>
+                            {isEdit ? t('Edit language') : t('Add language')}
+                        </DialogTitle>
                     </DialogHeader>
 
                     <div className="grid gap-2">
                         <Label htmlFor="locale-code">{t('Code')}</Label>
                         {isEdit ? (
-                            <Input id="locale-code" dir="ltr" className="font-mono" value={form.data.code} disabled />
+                            <Input
+                                id="locale-code"
+                                dir="ltr"
+                                className="font-mono"
+                                value={form.data.code}
+                                disabled
+                            />
                         ) : (
-                            <Select value={form.data.code} onValueChange={choose}>
-                                <SelectTrigger id="locale-code" className="w-full">
-                                    <SelectValue placeholder={t('Choose a language')} />
+                            <Select
+                                value={form.data.code}
+                                onValueChange={choose}
+                            >
+                                <SelectTrigger
+                                    id="locale-code"
+                                    className="w-full"
+                                >
+                                    <SelectValue
+                                        placeholder={t('Choose a language')}
+                                    />
                                 </SelectTrigger>
                                 <SelectContent>
                                     {catalog.map((entry) => (
                                         <SelectItem
                                             key={entry.code}
                                             value={entry.code}
-                                            disabled={existing.includes(entry.code)}
+                                            disabled={existing.includes(
+                                                entry.code,
+                                            )}
                                         >
                                             <bdi dir="ltr">
                                                 {entry.code} — {entry.name}
@@ -171,8 +201,12 @@ export function LocaleFormDialog({
                         )}
                         <p className="text-xs text-muted-foreground">
                             {isEdit
-                                ? t('The language code cannot be changed after creation.')
-                                : t('Only languages from the supported list can be added.')}
+                                ? t(
+                                      'The language code cannot be changed after creation.',
+                                  )
+                                : t(
+                                      'Only languages from the supported list can be added.',
+                                  )}
                         </p>
                         <InputError message={form.errors.code} />
                     </div>
@@ -183,7 +217,9 @@ export function LocaleFormDialog({
                             id="locale-name"
                             dir="ltr"
                             value={form.data.english_name}
-                            onChange={(event) => form.setData('english_name', event.target.value)}
+                            onChange={(event) =>
+                                form.setData('english_name', event.target.value)
+                            }
                             maxLength={100}
                             required
                         />
@@ -191,34 +227,54 @@ export function LocaleFormDialog({
                     </div>
 
                     <div className="grid gap-2">
-                        <Label htmlFor="locale-native-name">{t('Native name')}</Label>
+                        <Label htmlFor="locale-native-name">
+                            {t('Native name')}
+                        </Label>
                         <Input
                             id="locale-native-name"
                             dir="auto"
                             value={form.data.native_name}
-                            onChange={(event) => form.setData('native_name', event.target.value)}
+                            onChange={(event) =>
+                                form.setData('native_name', event.target.value)
+                            }
                             maxLength={120}
                         />
                         <InputError message={form.errors.native_name} />
                     </div>
 
                     <div className="grid gap-1">
-                        <span className="text-sm font-medium">{t('Text direction')}</span>
+                        <span className="text-sm font-medium">
+                            {t('Text direction')}
+                        </span>
                         <p className="text-sm text-muted-foreground">
-                            {direction === '' ? '—' : direction === 'RTL' ? t('Right to left') : t('Left to right')}
+                            {direction === ''
+                                ? '—'
+                                : direction === 'RTL'
+                                  ? t('Right to left')
+                                  : t('Left to right')}
                         </p>
                         <InputError message={form.errors.text_direction} />
                     </div>
 
-                    {codeSelect('default_calendar_code', t('Calendar'), calendars)}
-                    {codeSelect('default_numbering_system_code', t('Numbering system'), numberingSystems)}
+                    {codeSelect(
+                        'default_calendar_code',
+                        t('Calendar'),
+                        calendars,
+                    )}
+                    {codeSelect(
+                        'default_numbering_system_code',
+                        t('Numbering system'),
+                        numberingSystems,
+                    )}
 
                     {!isEdit && (
                         <div className="flex items-center gap-2">
                             <Checkbox
                                 id="locale-active"
                                 checked={form.data.is_active}
-                                onCheckedChange={(checked) => form.setData('is_active', checked === true)}
+                                onCheckedChange={(checked) =>
+                                    form.setData('is_active', checked === true)
+                                }
                             />
                             <Label htmlFor="locale-active">{t('Active')}</Label>
                         </div>
@@ -226,10 +282,17 @@ export function LocaleFormDialog({
                     <InputError message={form.errors.is_active} />
 
                     <DialogFooter>
-                        <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => onOpenChange(false)}
+                        >
                             {t('Cancel')}
                         </Button>
-                        <Button type="submit" disabled={form.processing || form.data.code === ''}>
+                        <Button
+                            type="submit"
+                            disabled={form.processing || form.data.code === ''}
+                        >
                             {isEdit ? t('Save') : t('Create')}
                         </Button>
                     </DialogFooter>

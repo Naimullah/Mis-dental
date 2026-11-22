@@ -10,6 +10,11 @@ import {
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
+import {
+    CatalogName,
+    CatalogTranslationsDialog,
+} from '@/components/catalog-translations-dialog';
+import type { CatalogTranslations } from '@/components/catalog-translations-dialog';
 import Heading from '@/components/heading';
 import InputError from '@/components/input-error';
 import { Badge } from '@/components/ui/badge';
@@ -46,6 +51,7 @@ const MINOR_UNIT_OPTIONS = ['0', '1', '2', '3', '4'];
 
 type Props = {
     currencies: Paginated<Currency>;
+    catalogTranslations: CatalogTranslations;
     filters: CurrencyFilters;
     exportsAvailable: { xlsx: boolean; pdf: boolean };
 };
@@ -84,12 +90,14 @@ function previewAmount(
 
 export default function CurrenciesIndex({
     currencies,
+    catalogTranslations,
     filters,
     exportsAvailable,
 }: Props) {
     const { t } = useTrans();
     const [search, setSearch] = useState(filters.q);
     const [editing, setEditing] = useState<Currency | null>(null);
+    const [translating, setTranslating] = useState<Currency | null>(null);
     const [creating, setCreating] = useState(false);
     const [statusTarget, setStatusTarget] = useState<Currency | null>(null);
     const [statusProcessing, setStatusProcessing] = useState(false);
@@ -209,6 +217,13 @@ export default function CurrenciesIndex({
             >
                 {currency.is_active ? t('Deactivate') : t('Activate')}
             </Button>
+            <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setTranslating(currency)}
+            >
+                {t('Translations')}
+            </Button>
         </div>
     );
 
@@ -325,8 +340,18 @@ export default function CurrenciesIndex({
                                             >
                                                 {currency.code}
                                             </td>
-                                            <td className="px-3 py-2" dir="ltr">
-                                                {currency.english_name}
+                                            <td className="px-3 py-2">
+                                                <CatalogName
+                                                    canonical={
+                                                        currency.english_name
+                                                    }
+                                                    translated={
+                                                        catalogTranslations
+                                                            .displayNames[
+                                                            currency.code
+                                                        ]
+                                                    }
+                                                />
                                             </td>
                                             <td className="px-3 py-2">
                                                 <bdi>
@@ -363,8 +388,14 @@ export default function CurrenciesIndex({
                                         </span>
                                         {statusBadge(currency)}
                                     </div>
-                                    <p className="mt-1 text-sm" dir="ltr">
-                                        {currency.english_name}
+                                    <p className="mt-1 text-sm">
+                                        <CatalogName
+                                            canonical={currency.english_name}
+                                            translated={
+                                                catalogTranslations
+                                                    .displayNames[currency.code]
+                                            }
+                                        />
                                     </p>
                                     <p className="mt-1 text-sm text-muted-foreground">
                                         {t('Symbol')}:{' '}
@@ -439,6 +470,17 @@ export default function CurrenciesIndex({
                 </div>
             </div>
 
+            {translating && (
+                <CatalogTranslationsDialog
+                    key={translating.code}
+                    data={catalogTranslations}
+                    code={translating.code}
+                    name={translating.english_name}
+                    url={`${BASE}/${translating.code}/translations`}
+                    maxLength={120}
+                    onClose={() => setTranslating(null)}
+                />
+            )}
             <CurrencyFormDialog
                 key={creating ? 'create-open' : 'create-closed'}
                 open={creating}

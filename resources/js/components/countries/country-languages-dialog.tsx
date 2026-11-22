@@ -51,7 +51,9 @@ export function CountryLanguagesDialog({
     const [busy, setBusy] = useState(false);
     const [errors, setErrors] = useState<Record<string, string>>({});
 
-    const base = panel ? `/platform/master-data/countries/${panel.country.iso2}/locales` : '';
+    const base = panel
+        ? `/platform/master-data/countries/${panel.country.iso2}/locales`
+        : '';
     const options = {
         preserveScroll: true,
         preserveState: true,
@@ -64,29 +66,45 @@ export function CountryLanguagesDialog({
     };
 
     const add = () => {
-        router.post(base, { locale_code: adding, is_default: addAsDefault }, {
-            ...options,
-            onSuccess: () => {
-                setAdding('');
-                setAddAsDefault(false);
+        router.post(
+            base,
+            { locale_code: adding, is_default: addAsDefault },
+            {
+                ...options,
+                onSuccess: () => {
+                    setAdding('');
+                    setAddAsDefault(false);
+                },
             },
-        });
+        );
     };
 
     const setDefault = (code: string, isDefault: boolean) => {
-        router.patch(`${base}/${code}/default`, { is_default: isDefault }, options);
+        router.patch(
+            `${base}/${code}/default`,
+            { is_default: isDefault },
+            options,
+        );
     };
 
     const remove = (code: string) => {
-        router.delete(`${base}/${code}`, { ...options, onSuccess: () => setRemoving(null) });
+        router.delete(`${base}/${code}`, {
+            ...options,
+            onSuccess: () => setRemoving(null),
+        });
     };
 
     return (
-        <Dialog open={panel !== null} onOpenChange={(open) => !open && onClose()}>
+        <Dialog
+            open={panel !== null}
+            onOpenChange={(open) => !open && onClose()}
+        >
             <DialogContent className="max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle>
-                        {t('Languages for :country', { country: panel?.country.iso2 ?? '' })}
+                        {t('Languages for :country', {
+                            country: panel?.country.iso2 ?? '',
+                        })}
                     </DialogTitle>
                     <DialogDescription>
                         <bdi dir="ltr">{panel?.country.english_name}</bdi>
@@ -94,26 +112,45 @@ export function CountryLanguagesDialog({
                 </DialogHeader>
 
                 {panel && panel.links.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">{t('No languages linked yet.')}</p>
+                    <p className="text-sm text-muted-foreground">
+                        {t('No languages linked yet.')}
+                    </p>
                 ) : (
                     <ul className="flex flex-col divide-y rounded-lg border">
                         {panel?.links.map((link) => (
-                            <li key={link.code} className="flex flex-col gap-2 px-3 py-2">
+                            <li
+                                key={link.code}
+                                className="flex flex-col gap-2 px-3 py-2"
+                            >
                                 <div className="flex flex-wrap items-center justify-between gap-2">
                                     <span className="flex flex-col">
-                                        <bdi dir="ltr" className="font-mono text-sm">
+                                        <bdi
+                                            dir="ltr"
+                                            className="font-mono text-sm"
+                                        >
                                             {link.code}
                                         </bdi>
-                                        <bdi dir="ltr" className="text-sm text-muted-foreground">
+                                        <bdi
+                                            dir="ltr"
+                                            className="text-sm text-muted-foreground"
+                                        >
                                             {link.english_name}
                                         </bdi>
                                     </span>
                                     <span className="flex flex-wrap gap-2">
                                         <Badge variant="secondary">
-                                            {link.text_direction === 'RTL' ? t('Right to left') : t('Left to right')}
+                                            {link.text_direction === 'RTL'
+                                                ? t('Right to left')
+                                                : t('Left to right')}
                                         </Badge>
-                                        {link.is_default && <Badge>{t('Default')}</Badge>}
-                                        {!link.is_active && <Badge variant="outline">{t('Inactive')}</Badge>}
+                                        {link.is_default && (
+                                            <Badge>{t('Default')}</Badge>
+                                        )}
+                                        {!link.is_active && (
+                                            <Badge variant="outline">
+                                                {t('Inactive')}
+                                            </Badge>
+                                        )}
                                     </span>
                                 </div>
 
@@ -125,7 +162,9 @@ export function CountryLanguagesDialog({
                                                 size="sm"
                                                 variant="outline"
                                                 disabled={busy}
-                                                onClick={() => setDefault(link.code, false)}
+                                                onClick={() =>
+                                                    setDefault(link.code, false)
+                                                }
                                             >
                                                 {t('Remove default')}
                                             </Button>
@@ -136,7 +175,12 @@ export function CountryLanguagesDialog({
                                                     size="sm"
                                                     variant="outline"
                                                     disabled={busy}
-                                                    onClick={() => setDefault(link.code, true)}
+                                                    onClick={() =>
+                                                        setDefault(
+                                                            link.code,
+                                                            true,
+                                                        )
+                                                    }
                                                 >
                                                     {t('Make default')}
                                                 </Button>
@@ -145,17 +189,24 @@ export function CountryLanguagesDialog({
                                         {removing === link.code ? (
                                             <>
                                                 <span className="self-center text-sm">
-                                                    {t('Remove :code from :country?', {
-                                                        code: link.code,
-                                                        country: panel.country.iso2,
-                                                    })}
+                                                    {t(
+                                                        'Remove :code from :country?',
+                                                        {
+                                                            code: link.code,
+                                                            country:
+                                                                panel.country
+                                                                    .iso2,
+                                                        },
+                                                    )}
                                                 </span>
                                                 <Button
                                                     type="button"
                                                     size="sm"
                                                     variant="destructive"
                                                     disabled={busy}
-                                                    onClick={() => remove(link.code)}
+                                                    onClick={() =>
+                                                        remove(link.code)
+                                                    }
                                                 >
                                                     {t('Confirm')}
                                                 </Button>
@@ -163,7 +214,9 @@ export function CountryLanguagesDialog({
                                                     type="button"
                                                     size="sm"
                                                     variant="ghost"
-                                                    onClick={() => setRemoving(null)}
+                                                    onClick={() =>
+                                                        setRemoving(null)
+                                                    }
                                                 >
                                                     {t('Cancel')}
                                                 </Button>
@@ -174,7 +227,9 @@ export function CountryLanguagesDialog({
                                                 size="sm"
                                                 variant="ghost"
                                                 disabled={busy}
-                                                onClick={() => setRemoving(link.code)}
+                                                onClick={() =>
+                                                    setRemoving(link.code)
+                                                }
                                             >
                                                 {t('Remove')}
                                             </Button>
@@ -189,22 +244,36 @@ export function CountryLanguagesDialog({
 
                 {canManage && panel && (
                     <div className="flex flex-col gap-2 rounded-lg border p-3">
-                        <Label htmlFor="country-language-add">{t('Add language')}</Label>
+                        <Label htmlFor="country-language-add">
+                            {t('Add language')}
+                        </Label>
                         {panel.available.length === 0 ? (
                             <p className="text-sm text-muted-foreground">
                                 {t('No more enabled languages to add.')}
                             </p>
                         ) : (
                             <>
-                                <Select value={adding} onValueChange={setAdding}>
-                                    <SelectTrigger id="country-language-add" className="w-full">
-                                        <SelectValue placeholder={t('Choose a language')} />
+                                <Select
+                                    value={adding}
+                                    onValueChange={setAdding}
+                                >
+                                    <SelectTrigger
+                                        id="country-language-add"
+                                        className="w-full"
+                                    >
+                                        <SelectValue
+                                            placeholder={t('Choose a language')}
+                                        />
                                     </SelectTrigger>
                                     <SelectContent>
                                         {panel.available.map((locale) => (
-                                            <SelectItem key={locale.code} value={locale.code}>
+                                            <SelectItem
+                                                key={locale.code}
+                                                value={locale.code}
+                                            >
                                                 <bdi dir="ltr">
-                                                    {locale.code} — {locale.english_name}
+                                                    {locale.code} —{' '}
+                                                    {locale.english_name}
                                                 </bdi>
                                             </SelectItem>
                                         ))}
@@ -214,11 +283,19 @@ export function CountryLanguagesDialog({
                                     <Checkbox
                                         id="country-language-default"
                                         checked={addAsDefault}
-                                        onCheckedChange={(checked) => setAddAsDefault(checked === true)}
+                                        onCheckedChange={(checked) =>
+                                            setAddAsDefault(checked === true)
+                                        }
                                     />
-                                    <Label htmlFor="country-language-default">{t('Set as default')}</Label>
+                                    <Label htmlFor="country-language-default">
+                                        {t('Set as default')}
+                                    </Label>
                                 </div>
-                                <Button type="button" disabled={busy || adding === ''} onClick={add}>
+                                <Button
+                                    type="button"
+                                    disabled={busy || adding === ''}
+                                    onClick={add}
+                                >
                                     {t('Add')}
                                 </Button>
                             </>
@@ -229,7 +306,9 @@ export function CountryLanguagesDialog({
 
                 {!canManage && (
                     <p className="text-xs text-muted-foreground">
-                        {t('Changes are disabled until platform permissions are set up.')}
+                        {t(
+                            'Changes are disabled until platform permissions are set up.',
+                        )}
                     </p>
                 )}
 

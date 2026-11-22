@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Platform\CatalogTranslationController;
 use App\Http\Controllers\Platform\CountryController;
 use App\Http\Middleware\BlockCountryMutationsAndExports;
 use Illuminate\Support\Facades\Route;
@@ -10,6 +11,8 @@ Route::prefix('platform/master-data/countries')
     ->middleware(['auth', 'can:manage-master-data'])
     ->group(function () {
         Route::get('/', [CountryController::class, 'index'])->name('index');
+        Route::put('/{country}/translations', [CatalogTranslationController::class, 'country'])
+            ->where('country', '[A-Z]{2}')->name('translations.update');
 
         Route::middleware(BlockCountryMutationsAndExports::class)->group(function () {
             Route::post('/', [CountryController::class, 'store'])->name('store');

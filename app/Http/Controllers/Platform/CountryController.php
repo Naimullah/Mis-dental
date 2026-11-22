@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreCountryRequest;
 use App\Http\Requests\UpdateCountryRequest;
 use App\Models\Country;
+use App\Services\CatalogTranslations\CatalogTranslations;
 use App\Services\Countries\CountryExporter;
 use App\Services\Countries\CountryQueryService;
 use App\Services\Countries\CountryService;
@@ -26,7 +27,7 @@ class CountryController extends Controller
         private readonly CountryQueryService $query,
     ) {}
 
-    public function index(Request $request): Response
+    public function index(Request $request, CatalogTranslations $translations): Response
     {
         $countries = $this->query->paginate($request->query())
             ->through(fn (Country $country): array => [
@@ -46,6 +47,7 @@ class CountryController extends Controller
 
         return Inertia::render('platform/master-data/countries/index', [
             'countries' => $countries,
+            'catalogTranslations' => $translations->forPage(new Country, $countries->getCollection()->pluck('english_name', 'iso2')->all()),
             'filters' => $filters,
             'canMutate' => false,
             'exportsAvailable' => ['xlsx' => false, 'pdf' => false],

@@ -1,11 +1,19 @@
 import { Link, usePage } from '@inertiajs/react';
 import {
+    BadgeCheck,
     BookOpen,
+    CalendarDays,
     Coins,
     FolderGit2,
     Globe,
+    IdCard,
     Languages,
     LayoutGrid,
+    MapPinned,
+    Percent,
+    ShieldCheck,
+    UserCog,
+    Users,
 } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { LocaleSwitcher } from '@/components/locale-switcher';
@@ -91,8 +99,59 @@ export function AppSidebar() {
                   href: '/platform/master-data/currencies',
                   icon: Coins,
               },
+              {
+                  title: t('Administrative areas'),
+                  href: '/platform/master-data/administrative-areas',
+                  icon: MapPinned,
+              },
+              {
+                  title: t('Public holidays'),
+                  href: '/platform/master-data/public-holidays',
+                  icon: CalendarDays,
+              },
+              {
+                  title: t('License types'),
+                  href: '/platform/master-data/license-types',
+                  icon: BadgeCheck,
+              },
+              {
+                  title: t('Identity document types'),
+                  href: '/platform/master-data/identity-document-types',
+                  icon: IdCard,
+              },
+              {
+                  title: t('Tax codes'),
+                  href: '/platform/master-data/tax-codes',
+                  icon: Percent,
+              },
           ]
         : [];
+
+    const securityItems: NavItem[] = can?.viewPermissionCatalog
+        ? [
+              {
+                  title: t('Permissions'),
+                  href: '/platform/security/permissions',
+                  icon: ShieldCheck,
+              },
+          ]
+        : [];
+
+    if (can?.managePlatformUsers) {
+        securityItems.push({
+            title: t('Users'),
+            href: '/platform/security/users',
+            icon: Users,
+        });
+    }
+
+    if (can?.manageRoles) {
+        securityItems.push({
+            title: t('Roles'),
+            href: '/platform/security/roles',
+            icon: UserCog,
+        });
+    }
 
     if (localeManagementUrl) {
         masterDataItems.push({
@@ -122,17 +181,25 @@ export function AppSidebar() {
 
             <SidebarContent>
                 <NavMain items={mainNavItems} />
-                {masterDataItems.length > 0 && (
+                {(masterDataItems.length > 0 || securityItems.length > 0) && (
                     <section aria-label={t('Platform Admin')}>
-                        {localeManagementUrl && (
+                        {(localeManagementUrl || securityItems.length > 0) && (
                             <p className="px-4 pt-2 text-sm font-medium group-data-[collapsible=icon]:hidden">
                                 {t('Platform Admin')}
                             </p>
                         )}
-                        <NavGroup
-                            label={t('Master Data')}
-                            items={masterDataItems}
-                        />
+                        {masterDataItems.length > 0 && (
+                            <NavGroup
+                                label={t('Master Data')}
+                                items={masterDataItems}
+                            />
+                        )}
+                        {securityItems.length > 0 && (
+                            <NavGroup
+                                label={t('Security')}
+                                items={securityItems}
+                            />
+                        )}
                     </section>
                 )}
             </SidebarContent>

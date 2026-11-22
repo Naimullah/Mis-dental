@@ -30,6 +30,11 @@
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>
         <env name="MASTER_DATA_OPEN_ACCESS" value="false"/>
+        <env name="PERMISSION_CATALOG_VIEWER_IDS" value=""/>
+        <env name="PERMISSION_TRANSLATION_MAINTAINER_IDS" value=""/>
+        <env name="PLATFORM_ACCOUNT_MAINTAINER_IDS" value=""/>
+        <env name="PERMISSION_DEFINITION_MAINTAINER_IDS" value=""/>
+        <env name="ROLE_MAINTAINER_IDS" value=""/>
         <env name="PULSE_ENABLED" value="false"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="NIGHTWATCH_ENABLED" value="false"/>

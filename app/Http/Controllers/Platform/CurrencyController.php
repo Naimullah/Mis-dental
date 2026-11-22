@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreCurrencyRequest;
 use App\Http\Requests\UpdateCurrencyRequest;
 use App\Models\Currency;
+use App\Services\CatalogTranslations\CatalogTranslations;
 use App\Services\Currencies\CurrencyExporter;
 use App\Services\Currencies\CurrencyQuery;
 use App\Services\Currencies\CurrencyService;
@@ -22,7 +23,7 @@ class CurrencyController extends Controller
         private readonly CurrencyQuery $query,
     ) {}
 
-    public function index(Request $request): Response
+    public function index(Request $request, CatalogTranslations $translations): Response
     {
         $filters = $this->query->filters($request);
 
@@ -39,6 +40,7 @@ class CurrencyController extends Controller
 
         return Inertia::render('platform/master-data/currencies/index', [
             'currencies' => $currencies,
+            'catalogTranslations' => $translations->forPage(new Currency, $currencies->getCollection()->pluck('english_name', 'code')->all()),
             'filters' => $filters,
             'exportsAvailable' => CurrencyExporter::available(),
         ]);

@@ -141,20 +141,33 @@ export default function LocalesIndex({
 
     const sortHeader = (column: LocaleSort, label: string) => {
         const active = filters.sort === column;
-        const Icon = !active ? ArrowUpDown : filters.dir === 'asc' ? ArrowUp : ArrowDown;
+        const Icon = !active
+            ? ArrowUpDown
+            : filters.dir === 'asc'
+              ? ArrowUp
+              : ArrowDown;
 
         return (
             <th
                 scope="col"
                 className="px-3 py-2 text-start font-medium"
-                aria-sort={active ? (filters.dir === 'asc' ? 'ascending' : 'descending') : 'none'}
+                aria-sort={
+                    active
+                        ? filters.dir === 'asc'
+                            ? 'ascending'
+                            : 'descending'
+                        : 'none'
+                }
             >
                 <button
                     type="button"
                     onClick={() =>
                         visit({
                             sort: column,
-                            dir: active && filters.dir === 'asc' ? 'desc' : 'asc',
+                            dir:
+                                active && filters.dir === 'asc'
+                                    ? 'desc'
+                                    : 'asc',
                         })
                     }
                     className="inline-flex items-center gap-1 hover:text-foreground"
@@ -169,11 +182,19 @@ export default function LocalesIndex({
 
     const rowActions = (locale: LocaleRow) => (
         <div className="flex flex-wrap gap-2">
-            <Button variant="outline" size="sm" onClick={() => setEditing(locale)}>
+            <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setEditing(locale)}
+            >
                 <Pencil aria-hidden />
                 {t('Edit')}
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => setStatusTarget(locale)}>
+            <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setStatusTarget(locale)}
+            >
                 {locale.is_active ? t('Deactivate') : t('Activate')}
             </Button>
         </div>
@@ -191,7 +212,9 @@ export default function LocalesIndex({
                     <div className="flex flex-wrap gap-2">
                         {exportsAvailable.xlsx && (
                             <Button variant="outline" asChild>
-                                <a href={`${LOCALES_URL}/export/xlsx?${exportQuery}`}>
+                                <a
+                                    href={`${LOCALES_URL}/export/xlsx?${exportQuery}`}
+                                >
                                     <FileSpreadsheet aria-hidden />
                                     {t('Export Excel')}
                                 </a>
@@ -199,7 +222,9 @@ export default function LocalesIndex({
                         )}
                         {exportsAvailable.pdf && (
                             <Button variant="outline" asChild>
-                                <a href={`${LOCALES_URL}/export/pdf?${exportQuery}`}>
+                                <a
+                                    href={`${LOCALES_URL}/export/pdf?${exportQuery}`}
+                                >
                                     <FileText aria-hidden />
                                     {t('Export PDF')}
                                 </a>
@@ -225,28 +250,48 @@ export default function LocalesIndex({
                     />
                     <Select
                         value={filters.status}
-                        onValueChange={(value) => visit({ status: value as LocaleFilters['status'] })}
+                        onValueChange={(value) =>
+                            visit({ status: value as LocaleFilters['status'] })
+                        }
                     >
-                        <SelectTrigger className="sm:w-40" aria-label={t('Status')}>
+                        <SelectTrigger
+                            className="sm:w-40"
+                            aria-label={t('Status')}
+                        >
                             <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="all">{t('All')}</SelectItem>
-                            <SelectItem value="active">{t('Active')}</SelectItem>
-                            <SelectItem value="inactive">{t('Inactive')}</SelectItem>
+                            <SelectItem value="active">
+                                {t('Active')}
+                            </SelectItem>
+                            <SelectItem value="inactive">
+                                {t('Inactive')}
+                            </SelectItem>
                         </SelectContent>
                     </Select>
                     <Select
                         value={filters.direction}
-                        onValueChange={(value) => visit({ direction: value as LocaleFilters['direction'] })}
+                        onValueChange={(value) =>
+                            visit({
+                                direction: value as LocaleFilters['direction'],
+                            })
+                        }
                     >
-                        <SelectTrigger className="sm:w-44" aria-label={t('Text direction')}>
+                        <SelectTrigger
+                            className="sm:w-44"
+                            aria-label={t('Text direction')}
+                        >
                             <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="all">{t('All')}</SelectItem>
-                            <SelectItem value="LTR">{t('Left to right')}</SelectItem>
-                            <SelectItem value="RTL">{t('Right to left')}</SelectItem>
+                            <SelectItem value="LTR">
+                                {t('Left to right')}
+                            </SelectItem>
+                            <SelectItem value="RTL">
+                                {t('Right to left')}
+                            </SelectItem>
                         </SelectContent>
                     </Select>
                 </div>
@@ -262,34 +307,60 @@ export default function LocalesIndex({
                                 <thead className="bg-muted/50 text-muted-foreground">
                                     <tr>
                                         {sortHeader('code', t('Code'))}
-                                        {sortHeader('english_name', t('English name'))}
-                                        {sortHeader('native_name', t('Native name'))}
-                                        {sortHeader('text_direction', t('Text direction'))}
+                                        {sortHeader(
+                                            'english_name',
+                                            t('English name'),
+                                        )}
+                                        {sortHeader(
+                                            'native_name',
+                                            t('Native name'),
+                                        )}
+                                        {sortHeader(
+                                            'text_direction',
+                                            t('Text direction'),
+                                        )}
                                         {sortHeader('is_active', t('Status'))}
-                                        <th scope="col" className="px-3 py-2 text-start font-medium">
+                                        <th
+                                            scope="col"
+                                            className="px-3 py-2 text-start font-medium"
+                                        >
                                             {t('Actions')}
                                         </th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {locales.data.map((locale) => (
-                                        <tr key={locale.code} className="border-t">
-                                            <td className="px-3 py-2 font-mono" dir="ltr">
+                                        <tr
+                                            key={locale.code}
+                                            className="border-t"
+                                        >
+                                            <td
+                                                className="px-3 py-2 font-mono"
+                                                dir="ltr"
+                                            >
                                                 {locale.code}
                                             </td>
                                             <td className="px-3 py-2" dir="ltr">
                                                 {locale.english_name}
                                             </td>
                                             <td className="px-3 py-2">
-                                                <bdi>{locale.native_name ?? '—'}</bdi>
+                                                <bdi>
+                                                    {locale.native_name ?? '—'}
+                                                </bdi>
                                             </td>
                                             <td className="px-3 py-2">
                                                 <Badge variant="secondary">
-                                                    {directionLabel(locale.text_direction)}
+                                                    {directionLabel(
+                                                        locale.text_direction,
+                                                    )}
                                                 </Badge>
                                             </td>
-                                            <td className="px-3 py-2">{statusBadge(locale)}</td>
-                                            <td className="px-3 py-2">{rowActions(locale)}</td>
+                                            <td className="px-3 py-2">
+                                                {statusBadge(locale)}
+                                            </td>
+                                            <td className="px-3 py-2">
+                                                {rowActions(locale)}
+                                            </td>
                                         </tr>
                                     ))}
                                 </tbody>
@@ -298,9 +369,15 @@ export default function LocalesIndex({
 
                         <ul className="flex flex-col gap-3 md:hidden">
                             {locales.data.map((locale) => (
-                                <li key={locale.code} className="rounded-lg border p-3">
+                                <li
+                                    key={locale.code}
+                                    className="rounded-lg border p-3"
+                                >
                                     <div className="flex items-center justify-between gap-2">
-                                        <span className="font-mono font-medium" dir="ltr">
+                                        <span
+                                            className="font-mono font-medium"
+                                            dir="ltr"
+                                        >
                                             {locale.code}
                                         </span>
                                         {statusBadge(locale)}
@@ -312,7 +389,9 @@ export default function LocalesIndex({
                                         <bdi>{locale.native_name ?? '—'}</bdi> ·{' '}
                                         {directionLabel(locale.text_direction)}
                                     </p>
-                                    <div className="mt-3">{rowActions(locale)}</div>
+                                    <div className="mt-3">
+                                        {rowActions(locale)}
+                                    </div>
                                 </li>
                             ))}
                         </ul>
@@ -329,32 +408,50 @@ export default function LocalesIndex({
                             })}
                     </p>
                     <div className="flex flex-wrap items-center gap-2">
-                        <Label htmlFor="locales-per-page" className="text-muted-foreground">
+                        <Label
+                            htmlFor="locales-per-page"
+                            className="text-muted-foreground"
+                        >
                             {t('Rows per page')}
                         </Label>
                         <Select
                             value={String(filters.per_page)}
-                            onValueChange={(value) => visit({ per_page: Number(value) })}
+                            onValueChange={(value) =>
+                                visit({ per_page: Number(value) })
+                            }
                         >
-                            <SelectTrigger id="locales-per-page" size="sm" className="w-20">
+                            <SelectTrigger
+                                id="locales-per-page"
+                                size="sm"
+                                className="w-20"
+                            >
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
                                 {PER_PAGE_OPTIONS.map((option) => (
-                                    <SelectItem key={option} value={String(option)}>
+                                    <SelectItem
+                                        key={option}
+                                        value={String(option)}
+                                    >
                                         {option}
                                     </SelectItem>
                                 ))}
                             </SelectContent>
                         </Select>
-                        <PageLink href={locales.prev_page_url} label={t('Previous')} />
+                        <PageLink
+                            href={locales.prev_page_url}
+                            label={t('Previous')}
+                        />
                         <span className="text-muted-foreground">
                             {t('Page :current of :last', {
                                 current: locales.current_page,
                                 last: locales.last_page,
                             })}
                         </span>
-                        <PageLink href={locales.next_page_url} label={t('Next')} />
+                        <PageLink
+                            href={locales.next_page_url}
+                            label={t('Next')}
+                        />
                     </div>
                 </div>
             </div>
@@ -379,21 +476,34 @@ export default function LocalesIndex({
                 onOpenChange={(open) => !open && setEditing(null)}
             />
 
-            <Dialog open={statusTarget !== null} onOpenChange={(open) => !open && setStatusTarget(null)}>
+            <Dialog
+                open={statusTarget !== null}
+                onOpenChange={(open) => !open && setStatusTarget(null)}
+            >
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle>
-                            {statusTarget?.is_active ? t('Deactivate') : t('Activate')}
+                            {statusTarget?.is_active
+                                ? t('Deactivate')
+                                : t('Activate')}
                         </DialogTitle>
                         <DialogDescription>
-                            {t('Change the status of :code?', { code: statusTarget?.code ?? '' })}
+                            {t('Change the status of :code?', {
+                                code: statusTarget?.code ?? '',
+                            })}
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => setStatusTarget(null)}>
+                        <Button
+                            variant="outline"
+                            onClick={() => setStatusTarget(null)}
+                        >
                             {t('Cancel')}
                         </Button>
-                        <Button onClick={confirmStatus} disabled={statusProcessing}>
+                        <Button
+                            onClick={confirmStatus}
+                            disabled={statusProcessing}
+                        >
                             {t('Confirm')}
                         </Button>
                     </DialogFooter>

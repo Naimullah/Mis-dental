@@ -161,17 +161,9 @@ return [
     */
 
     'features' => [
-        Features::registration(),
+        // No public self-registration: accounts are created by platform maintainers (P03.03).
         Features::resetPasswords(),
         Features::emailVerification(),
-        Features::twoFactorAuthentication([
-            'confirm' => true,
-            'confirmPassword' => true,
-            // 'window' => 0
-        ]),
-        Features::passkeys([
-            'confirmPassword' => true,
-        ]),
     ],
 
 ];
